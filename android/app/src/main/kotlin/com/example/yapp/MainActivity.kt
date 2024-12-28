@@ -1,4 +1,4 @@
-package com.example.yapp
+package com.bradley.yapp
 
 import io.flutter.embedding.android.FlutterActivity
 import android.graphics.Bitmap
