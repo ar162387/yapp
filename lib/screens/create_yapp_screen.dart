@@ -126,23 +126,29 @@ class _CreateYappScreenState extends State<CreateYappScreen> {
   /// Starts the recording process using the `AudioRecorder`.
   /// Saves the audio file path in `_recordingPath`.
   /// initializes the timer for 2-minute tracking.
+  /// Starts the recording process and resets the timer.
   Future<void> _startRecording() async {
     try {
       if (await _audioRecorder.hasPermission()) {
         final directory = await getApplicationDocumentsDirectory();
-        final String path = p.join(directory.path,
-            "recording_${DateTime.now().millisecondsSinceEpoch}.m4a");
+        final String path = p.join(
+          directory.path,
+          "recording_${DateTime.now().millisecondsSinceEpoch}.m4a",
+        );
 
         await _audioRecorder.start(
           const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 128000),
           path: path,
         );
+
         setState(() {
           _isRecording = true;
           _showRecordingControls = true;
           _isPaused = false;
           _recordingPath = path;
-          _startTimer(); // Start the timer to enforce the 2-minute limit
+          _recordingSeconds = 0; // Reset the timer seconds
+          _formattedTime = "00:00"; // Reset the formatted timer
+          _startTimer(); // Start the timer for the new recording
         });
       }
     } catch (e) {
@@ -171,32 +177,43 @@ class _CreateYappScreenState extends State<CreateYappScreen> {
     }
   }
 
-  /// Removes the uploaded audio and re-enables the record button.
+
+  /// Removes the uploaded audio and resets the timer.
   void _removeAudio() {
     setState(() {
       _recordingPath = null;
+      _recordingSeconds = 0; // Reset the timer seconds
+      _formattedTime = "00:00"; // Reset the formatted timer
     });
   }
 
+
   /// Stops the recording and resets the timer and state.
   /// Stops recording, resets the timer, and updates state with the audio path.
+  /// Stops the recording and updates the timer and state.
+  /// Ensures the correct duration of the uploaded audio is displayed.
   Future<void> _stopRecording() async {
     try {
       final path = await _audioRecorder.stop();
       _timer?.cancel();
+
+      // Use the final value of `_formattedTime` from the timer
+      final finalFormattedTime = _formattedTime;
+
       setState(() {
         _isRecording = false;
         _isPaused = false;
         _showRecordingControls = false;
-        _recordingSeconds = 0;
-        _formattedTime = "00:00";
         _recordingPath = path; // Keep track of the saved path
+        _formattedTime = finalFormattedTime; // Retain the correct recording time
       });
+
       print("Recording saved at: $path");
     } catch (e) {
       print("Error stopping recording: $e");
     }
   }
+
 
 
 
@@ -255,7 +272,9 @@ class _CreateYappScreenState extends State<CreateYappScreen> {
 
       // FFmpeg command to combine image and audio
       final String command =
-          "-loop 1 -i ${imageToUse.path} -i $_recordingPath -c:v libx264 -preset ultrafast -tune stillimage -c:a aac -b:a 128k -shortest $outputPath";
+          "-loop 1 -i ${imageToUse.path} -i $_recordingPath "
+          "-c:v libx264 -preset veryfast -profile:v baseline -level 3.0 -pix_fmt yuv420p "
+          "-vf scale=720:-2 -t 120 -c:a aac -b:a 128k -shortest $outputPath";
 
       await FFmpegKit.executeAsync(command, (session) async {
         final returnCode = await session.getReturnCode();
