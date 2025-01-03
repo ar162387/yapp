@@ -391,14 +391,29 @@ class _CreateYappScreenState extends State<CreateYappScreen> {
     try {
       final database = await YappDatabase.instance.database;
 
-      // Insert into database
+      // Create a new Yapp instance
+      final newYapp = Yapp(
+        id: DateTime.now().millisecondsSinceEpoch.toString(), // Unique ID
+        name: 'Yapp#${DateTime.now().millisecondsSinceEpoch}', // Default name
+        imagePath: _selectedImage!.path,
+        audioPath: _recordingPath!,
+        videoPath: _videoPath!,
+        creationDate: DateTime.now(),
+      );
+
+      // Save Yapp to database
       await database.insert('yapps', {
-        'name': 'Yapp#${DateTime.now().millisecondsSinceEpoch}', // Generate default name
-        'imagePath': _selectedImage!.path,
-        'audioPath': _recordingPath!,
-        'videoPath': _videoPath!,
-        'creationDate': DateTime.now().toIso8601String(),
+        'id': newYapp.id,
+        'name': newYapp.name,
+        'imagePath': newYapp.imagePath,
+        'audioPath': newYapp.audioPath,
+        'videoPath': newYapp.videoPath,
+        'creationDate': newYapp.creationDate.toIso8601String(),
       });
+
+      // Add Yapp to the Provider's list
+      final yappProvider = context.read<YappProvider>();
+      yappProvider.addYapp(newYapp);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Yapp saved successfully!')),
@@ -413,6 +428,7 @@ class _CreateYappScreenState extends State<CreateYappScreen> {
       );
     }
   }
+
 
 
 

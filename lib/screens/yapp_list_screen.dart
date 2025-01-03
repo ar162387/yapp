@@ -209,7 +209,10 @@ class _YappListScreenState extends State<YappListScreen> {
                         MaterialPageRoute(
                           builder: (context) => const CreateYappScreen(),
                         ),
-                      );
+                      ).then((_) {
+                        // Refresh the list after coming back
+                        _fetchYapps();
+                      });
                     },
                     child: const Text('Create a Yapp'),
                   ),
