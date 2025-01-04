@@ -8,6 +8,8 @@
 	<string>We need to access your photo library to select images.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>We need to record audio for your Yapps.</string>
+	<key>NSFileProtectionComplete</key>
+	<string>Complete file protection is required for secure access.</string>
 
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
